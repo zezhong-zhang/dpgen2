@@ -198,13 +198,14 @@ class RunDPTrain(OP):
 
             # train model
             if impl == "tensorflow" and os.path.isfile("checkpoint"):
-                command = [dp_command, "train", "--restart", "model.ckpt", train_script_name]
+                command = ["dodrio-bind-readonly", dp_command, "train", "--restart", "model.ckpt", train_script_name]
             elif impl == "pytorch" and len(glob.glob("model_[0-9]*.pt")) > 0:
                 checkpoint = "model_%s.pt" % max([int(f[6:-3]) for f in glob.glob("model_[0-9]*.pt")])
-                command = [dp_command, "train", "--restart", checkpoint, train_script_name]
+                command = ["dodrio-bind-readonly",dp_command, "train", "--restart", checkpoint, train_script_name]
             elif (do_init_model or finetune_mode == "train-init") and not config["init_model_with_finetune"]:
                 if impl == "tensorflow":
                     command = [
+                        "dodrio-bind-readonly",
                         dp_command,
                         "train",
                         "--init-frz-model",
@@ -213,6 +214,7 @@ class RunDPTrain(OP):
                     ]
                 elif impl == "pytorch":
                     command = [
+                        "dodrio-bind-readonly",
                         dp_command,
                         "train",
                         "--init-model",
@@ -221,6 +223,7 @@ class RunDPTrain(OP):
                     ]
             elif finetune_mode == "finetune" or ((do_init_model or finetune_mode == "train-init") and config["init_model_with_finetune"]):
                 command = [
+                    "dodrio-bind-readonly",
                     dp_command,
                     "train",
                     train_script_name,
@@ -228,7 +231,7 @@ class RunDPTrain(OP):
                     str(init_model),
                 ] + finetune_args.split()
             else:
-                command = [dp_command, "train", train_script_name]
+                command = ["dodrio-bind-readonly",dp_command, "train", train_script_name]
             ret, out, err = run_command(command)
             if ret != 0:
                 clean_before_quit()
